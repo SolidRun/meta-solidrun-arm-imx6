@@ -1,0 +1,43 @@
+OpenEmbedded/Yocto BSP layer for SolidRun's iMX6 based platforms
+================================================================
+
+This layer provides support for SolidRun's iMX6 based platforms for
+use with OpenEmbedded and/or Yocto Freescale's BSP layer.
+
+This layer depends on:
+
+URI: git://git.openembedded.org/openembedded-core
+branch: fido
+revision: HEAD
+
+URI: git://git.yoctoproject.org/meta-fsl-arm
+branch: fido
+revision: HEAD
+
+Contributing
+------------
+
+To contribute to this layer you should the patches for review to the
+mailing list.
+
+Forum:
+
+    http://forum.solid-run.com/linux-kernel-and-bootloaders-on-cubox-i-and-hummin-f10/
+
+Source code:
+
+    https://github.com/SolidRun/meta-solidrun-arm-imx6
+
+When creating a patch of the last commit, use
+
+    git format-patch -s --subject-prefix='meta-solidrun-arm-imx6][PATCH' -1
+
+Patches are normally intended for the master branch.
+
+Patches for other branches should be sent separately so they can be tracked
+individually in Patchwork and should have the branch name in brackets.
+
+For example, use this to generate a patch for branch 'fido':
+
+    git format-patch -s \
+	--subject-prefix='meta-freescale][meta-solidrun-arm-imx6][fido][PATCH' -1

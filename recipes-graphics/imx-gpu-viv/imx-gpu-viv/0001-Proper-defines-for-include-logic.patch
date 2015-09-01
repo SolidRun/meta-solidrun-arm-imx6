@@ -1,0 +1,49 @@
+From b1c97691726e49e2d9df2e209782e41dd818264e Mon Sep 17 00:00:00 2001
+From: Jon Nettleton <jon.nettleton@gmail.com>
+Date: Sat, 29 Aug 2015 10:58:35 +0200
+Subject: [PATCH] Proper defines for include logic
+
+Change the include logic so it is smarter about what to include
+when certain defines are set.  This should stop everything from
+falling through and failing to find X11 headers that aren't there.
+---
+ gpu-core/usr/include/EGL/eglvivante.h | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/gpu-core/usr/include/EGL/eglvivante.h b/gpu-core/usr/include/EGL/eglvivante.h
+index da02eb6..c6afaac 100644
+--- a/gpu-core/usr/include/EGL/eglvivante.h
++++ b/gpu-core/usr/include/EGL/eglvivante.h
+@@ -46,7 +46,7 @@ typedef HDC             EGLNativeDisplayType;
+ typedef HWND            EGLNativeWindowType;
+ typedef HBITMAP         EGLNativePixmapType;
+ 
+-#elif defined(LINUX) && defined(EGL_API_DFB) && !defined(__APPLE__)
++#elif defined(__linux__) && defined(EGL_API_DFB) && !defined(__APPLE__)
+ #include <directfb.h>
+ typedef struct _DFBDisplay * EGLNativeDisplayType;
+ typedef IDirectFBWindow *  EGLNativeWindowType;
+@@ -82,7 +82,10 @@ dfbDestroyPixmap(
+     EGLNativePixmapType Pixmap
+     );
+ 
+-#elif defined(LINUX) && defined(EGL_API_FB) && !defined(__APPLE__)
++#elif (defined(__linux__) && defined(EGL_API_FB)) || \
++      (defined(__linux__) && defined(MESA_EGL_NO_X11_HEADERS)) || \
++      (defined(__linux__) && defined(WL_EGL_PLATFORM)) && \
++      !defined(__APPLE__)
+ 
+ #if defined(WL_EGL_PLATFORM)
+ /* Wayland types for client apps. */
+@@ -217,7 +220,7 @@ struct egl_native_pixmap_t;
+     typedef void*                               EGLNativeDisplayType;
+ #endif
+ 
+-#elif defined(LINUX) || defined(__APPLE__)
++#elif defined(__linux__) || defined(__APPLE__)
+ /* X11 platform. */
+ #include <X11/Xlib.h>
+ #include <X11/Xutil.h>
+-- 
+1.8.3.1
+

@@ -1,0 +1,6 @@
+PACKAGECONFIG_remove = "gallium"
+PACKAGECONFIG_remove = "gallium-egl"
+PACKAGECONFIG_remove = "gallium-gbm"
+PACKAGECONFIG_remove = "gallium-llvm"
+PACKAGECONFIG_remove = "gles"
+PACKAGECONFIG_remove = "openvg"

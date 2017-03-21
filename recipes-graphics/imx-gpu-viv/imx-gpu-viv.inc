@@ -11,7 +11,7 @@ DEPENDS += "${@base_contains('DISTRO_FEATURES', 'x11', 'virtual/libx11 libxdamag
                              base_contains('DISTRO_FEATURES', 'wayland', 'wayland', \
                                            '', d), d)}"
 
-EXTRA_PROVIDES = ""
+EXTRA_PROVIDES = " "
 EXTRA_PROVIDES_mx6q  = " virtual/libgl virtual/libgles1 virtual/libgles2"
 EXTRA_PROVIDES_mx6dl  = " virtual/libgl virtual/libgles1 virtual/libgles2"
 EXTRA_PROVIDES_mx6sx  = " virtual/libgl virtual/libgles1 virtual/libgles2"

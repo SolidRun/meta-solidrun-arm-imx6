@@ -1,0 +1,1 @@
+mmcargs=setenv bootargs console=${console},${baudrate} root=${mmcroot} rootwait raid=noautodetect 

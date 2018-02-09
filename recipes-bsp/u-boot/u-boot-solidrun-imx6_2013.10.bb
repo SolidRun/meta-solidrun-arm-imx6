@@ -4,30 +4,25 @@ DESCRIPTION = "u-boot which includes support for SolidRun boards such as Cubox-i
 LICENSE = "GPLv2+"
 LIC_FILES_CHKSUM = "file://Licenses/README;md5=bc069111b5e5b1ed8bed98ae73b596ec"
 
-UBOOT_KCONFIG_SUPPORT = "1"
-inherit resin-u-boot
-
 PROVIDES += "u-boot"
 
 PV = "v2013.10+git${SRCPV}"
 
-SRCREV = "56c055a72841c9598d13209696a040d42fc0077c"
+SRCREV = "9f109680c09ea563b8c0b256c9c455975d5cbe09"
 SRC_URI = " \
-    git://github.com/SolidRun/u-boot-imx6.git;branch=imx6-next \
-    ${@bb.utils.contains('DISTRO_FEATURES','development-image','file://uEnv-devel.txt','file://uEnv.txt',d)} \
+    git://github.com/SolidRun/u-boot-imx6.git;branch=imx6 \
+    file://uEnv.txt \
     "
 
 S = "${WORKDIR}/git"
 
 UENV_FILENAME ?= "uEnv-${MACHINE}.txt"
 
-do_deploy_append () {
-    if ${@bb.utils.contains('DISTRO_FEATURES','development-image','true','false',d)}; then 
-        install ${WORKDIR}/uEnv-devel.txt ${DEPLOYDIR}/${UENV_FILENAME}
-    else
-        install ${WORKDIR}/uEnv.txt ${DEPLOYDIR}/${UENV_FILENAME}
-    fi
+deploy_uenv () {
+    install ${WORKDIR}/uEnv.txt ${DEPLOYDIR}/${UENV_FILENAME}
 }
+
+do_deploy[postfuncs] += "deploy_uenv"
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 COMPATIBLE_MACHINE = "solidrun-imx6"

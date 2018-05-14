@@ -1,0 +1,47 @@
+From a6e7a3da24702b5b064dd0434e93acabbfa835d1 Mon Sep 17 00:00:00 2001
+From: Jon Nettleton <jon@solid-run.com>
+Date: Sun, 13 May 2018 11:08:18 +0200
+Subject: [PATCH 2/2] Switch FB_MULTI_BUFFERS to default of triple buffering
+
+By default the kernel framebuffer driver allocates space for triple
+buffer the display.  Make this the default setup here as well.
+---
+ .../eglfs/deviceintegration/eglfs_viv/qeglfsvivintegration.cpp        | 4 ++--
+ .../eglfs/deviceintegration/eglfs_viv_wl/qeglfsvivwlintegration.cpp   | 4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/src/plugins/platforms/eglfs/deviceintegration/eglfs_viv/qeglfsvivintegration.cpp b/src/plugins/platforms/eglfs/deviceintegration/eglfs_viv/qeglfsvivintegration.cpp
+index f2aebd32cb..5430f0c1c2 100644
+--- a/src/plugins/platforms/eglfs/deviceintegration/eglfs_viv/qeglfsvivintegration.cpp
++++ b/src/plugins/platforms/eglfs/deviceintegration/eglfs_viv/qeglfsvivintegration.cpp
+@@ -56,9 +56,9 @@ void QEglFSVivIntegration::platformInit()
+     bool multiBufferNotEnabledYet = qEnvironmentVariableIsEmpty("FB_MULTI_BUFFER");
+     bool multiBuffer = qEnvironmentVariableIsEmpty("QT_EGLFS_IMX6_NO_FB_MULTI_BUFFER");
+     if (multiBufferNotEnabledYet && multiBuffer) {
+-        qWarning() << "QEglFSVivIntegration will set environment variable FB_MULTI_BUFFER=2 to enable double buffering and vsync.\n"
++        qWarning() << "QEglFSVivIntegration will set environment variable FB_MULTI_BUFFER=3 to enable triple buffering and vsync.\n"
+                    << "If this is not desired, you can override this via: export QT_EGLFS_IMX6_NO_FB_MULTI_BUFFER=1";
+-        qputenv("FB_MULTI_BUFFER", "2");
++        qputenv("FB_MULTI_BUFFER", "3");
+     }
+ 
+ #ifdef Q_OS_INTEGRITY
+diff --git a/src/plugins/platforms/eglfs/deviceintegration/eglfs_viv_wl/qeglfsvivwlintegration.cpp b/src/plugins/platforms/eglfs/deviceintegration/eglfs_viv_wl/qeglfsvivwlintegration.cpp
+index 04e7a4d769..02e8ef5110 100644
+--- a/src/plugins/platforms/eglfs/deviceintegration/eglfs_viv_wl/qeglfsvivwlintegration.cpp
++++ b/src/plugins/platforms/eglfs/deviceintegration/eglfs_viv_wl/qeglfsvivwlintegration.cpp
+@@ -54,9 +54,9 @@ void QEglFSVivWaylandIntegration::platformInit()
+     bool multiBufferNotEnabledYet = qEnvironmentVariableIsEmpty("FB_MULTI_BUFFER");
+     bool multiBuffer = qEnvironmentVariableIsEmpty("QT_EGLFS_IMX6_NO_FB_MULTI_BUFFER");
+     if (multiBufferNotEnabledYet && multiBuffer) {
+-        qWarning() << "QEglFSVivWaylandIntegration will set environment variable FB_MULTI_BUFFER=2 to enable double buffering and vsync.\n"
++        qWarning() << "QEglFSVivWaylandIntegration will set environment variable FB_MULTI_BUFFER=3 to enable triple buffering and vsync.\n"
+                    << "If this is not desired, you can override this via: export QT_EGLFS_IMX6_NO_FB_MULTI_BUFFER=1";
+-        qputenv("FB_MULTI_BUFFER", "2");
++        qputenv("FB_MULTI_BUFFER", "3");
+     }
+ 
+     mWaylandDisplay = wl_display_create();
+-- 
+2.11.1
+

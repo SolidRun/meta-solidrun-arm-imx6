@@ -13,7 +13,7 @@ SRC_URI_append_imxgpu2d = "file://0014-Add-IMX-GPU-support.patch \
 SRC_URI_append_imxgpu3d = " \
     ${@bb.utils.contains('DISTRO_FEATURES', 'wayland', \
                          'file://0015-Add-eglfs_viv_wl-to-IMX-GPU.patch ', \
-                         'file://0015-Add-eglfs_viv_wl-to-IMX-GPU.patch ', d)} \
+                         'file://0015-Add-eglfs_viv-to-IMX-GPU.patch ', d)} \
 "
 
 SRC_URI_append_imxgpu3d = " \
@@ -35,3 +35,14 @@ QT_CONFIG_FLAGS_APPEND_imxgpu2d = "${@bb.utils.contains('DISTRO_FEATURES', 'x11'
 QT_CONFIG_FLAGS_APPEND_imxgpu3d = "${@bb.utils.contains('DISTRO_FEATURES', 'x11', '-no-eglfs', '-eglfs -qpa eglfs', d)}"
 QT_CONFIG_FLAGS_APPEND_use-mainline-bsp =  "${@bb.utils.contains('DISTRO_FEATURES', 'x11', '-no-eglfs', '-eglfs -qpa eglfs', d)}"
 QT_CONFIG_FLAGS_append = " ${QT_CONFIG_FLAGS_APPEND}"
+
+RDEPENDS_qtbase_append = " tslib-conf tslib-calibrate"
+
+PACKAGECONFIG_MULTIMEDIA_append = " alsa"
+PACKAGECONFIG_DEFAULT_append = " tslib"
+
+PACKAGECONFIG_FONTS = "fontconfig"
+
+#input devices
+PACKAGECONFIG_append = " libinput libevdev mtdev"
+PACKAGECONFIG_DEFAULT = "dbus udev libs freetype"

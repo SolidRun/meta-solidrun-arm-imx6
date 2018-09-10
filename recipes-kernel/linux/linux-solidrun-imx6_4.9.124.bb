@@ -7,7 +7,7 @@ branch with optimize support for SolidRun hardware."
 DEPENDS += "lzop-native bc-native"
 
 SRCBRANCH = "solidrun-imx_4.9.x_1.0.0_ga"
-SRCREV = "457f3ded3371686c15786fd8e934158625647a88"
+SRCREV = "3b4f1a2b7c57f198641c0a45e23fe7255a164daf"
 LOCALVERSION = "-mx6-sr"
 
 SRC_URI = "git://github.com/SolidRun/linux-fslc.git;branch=${SRCBRANCH} \

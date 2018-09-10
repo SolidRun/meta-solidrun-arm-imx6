@@ -14,7 +14,7 @@ RDEPENDS_gstreamer1.0-plugins-imx-imxaudio = "gstreamer1.0-plugins-good-audiopar
 RDEPENDS_gstreamer1.0-plugins-imx-imxvpu = "gstreamer1.0-plugins-bad-videoparsersbad"
 
 SRCBRANCH ?= "master"
-SRCREV = "048d596dfc657f16d235029c39221b0a118e5c87"
+SRCREV = "963aea60b135d40236411357eb0b2de15eac9af5"
 SRC_URI = "git://github.com/Freescale/gstreamer-imx.git;branch=${SRCBRANCH}"
 
 S = "${WORKDIR}/git"
@@ -32,7 +32,8 @@ EGLVIVSINK_PLATFORM = "${@bb.utils.contains('DISTRO_FEATURES', 'wayland', 'wayla
                           'fb', d),d)}"
 
 EGL_PLATFORM_CONF = "--egl-platform=${EGLVIVSINK_PLATFORM}"
-EXTRA_OECONF = "--kernel-headers=${STAGING_KERNEL_DIR}/include ${PACKAGECONFIG_CONFARGS}"
+EXTRA_OECONF = "--kernel-headers=${STAGING_KERNEL_DIR}/include \
+		--bindir=${bindir} --libdir=${libdir} ${PACKAGECONFIG_CONFARGS}"
 
 EGLVIVSINK_DEPENDS = " \
     virtual/egl virtual/libgles2 \

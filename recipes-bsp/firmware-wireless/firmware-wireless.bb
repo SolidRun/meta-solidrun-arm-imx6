@@ -6,7 +6,7 @@ LIC_FILES_CHKSUM = "file://LICENSE.TIInit_12.8.32;md5=1c9961176d6529283e0d0c983b
                     file://LICENSE.wl18xx-fw-4;md5=c5e02be633f1499c109d1652514d85ec"
 
 SRC_URI = "git://github.com/mxOBS/deb-pkg_cuboxi-firmware-wireless.git;protocol=https "
-SRCREV = "ebb097ce3dc0b5330995ffd7b87fc8825b6820c5"
+SRCREV = "b2ab7f29f6a6d56147256887de47a2fd12622d2c"
 
 S = "${WORKDIR}/git"
 
@@ -14,7 +14,7 @@ do_install () {
     install -d ${D}${base_libdir}/firmware/brcm 
     install -d ${D}${base_libdir}/firmware/ti-connectivity 
 
-    cp -fv ${S}/bcm*.hcd ${D}${base_libdir}/firmware/brcm
+    cp -fv ${S}/BCM*.hcd ${D}${base_libdir}/firmware/brcm
     cp -fv ${S}/brcm*sdio.* ${D}${base_libdir}/firmware/brcm
 
     cp -fv ${S}/TIInit_11.8.32.bts ${D}${base_libdir}/firmware/ti-connectivity

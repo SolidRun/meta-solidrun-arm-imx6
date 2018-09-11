@@ -5,7 +5,7 @@ LICENSE = "Proprietary"
 LIC_FILES_CHKSUM = "file://LICENSE.TIInit_12.8.32;md5=1c9961176d6529283e0d0c983be41b45 \
                     file://LICENSE.wl18xx-fw-4;md5=c5e02be633f1499c109d1652514d85ec"
 
-SRC_URI = "git://github.com/mxOBS/deb-pkg_cuboxi-firmware-wireless.git;protocol=https "
+SRC_URI = "git://github.com/SolidRun/deb-pkg_cuboxi-firmware-wireless.git;protocol=https;branch=master "
 SRCREV = "b2ab7f29f6a6d56147256887de47a2fd12622d2c"
 
 S = "${WORKDIR}/git"

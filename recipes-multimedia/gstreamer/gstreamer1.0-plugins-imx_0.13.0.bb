@@ -5,6 +5,7 @@ SECTION = "multimedia"
 # gstreamer1.0-plugins-bad is in DEPENDS because the build script scans for the
 # GstPhotography headers and libraries
 DEPENDS = "gstreamer1.0 gstreamer1.0-plugins-base gstreamer1.0-plugins-bad virtual/kernel"
+DEPENDS_append_imxgpu2d = " virtual/libg2d"
 # add the audioparsers and the videoparsersbad plugins as RDEPENDS ; audioparsers
 # for the uniaudio decoder, videoparsersbad for the VPU video decoder
 # the gstreamer1.0-plugins-imx RDEPENDS is necessary to ensure the -good recipe is

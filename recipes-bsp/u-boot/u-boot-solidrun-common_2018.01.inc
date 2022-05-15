@@ -7,7 +7,7 @@ require recipes-bsp/u-boot/u-boot.inc
 
 PROVIDES += "u-boot"
 
-SRC_URI = "git://github.com/SolidRun/u-boot.git;branch=${SRCBRANCH}"
+SRC_URI = "git://github.com/SolidRun/u-boot.git;branch=${SRCBRANCH};protocol=https"
 
 SRCREV = "457cdd60c331e4beeded338123f6965f11780418"
 SRCBRANCH = "v2018.01-solidrun-imx6"

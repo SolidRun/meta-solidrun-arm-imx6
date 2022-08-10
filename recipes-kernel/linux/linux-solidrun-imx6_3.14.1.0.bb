@@ -15,3 +15,9 @@ SRC_URI = "git://github.com/SolidRun/linux-fslc.git;branch=${SRCBRANCH} \
            file://defconfig"
 
 COMPATIBLE_MACHINE = "(solidrun-imx6)"
+
+# preserve the generated Makefile from out-of-tree kernel builds
+# Note: this should be fixed in kernel.bbclass!
+do_shared_workdir_append () {
+	cp Makefile "${STAGING_KERNEL_BUILDDIR}/"
+}

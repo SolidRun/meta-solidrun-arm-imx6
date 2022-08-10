@@ -1,0 +1,46 @@
+diff -aur backports-5.10.110-1.orig/backport-include/linux/compiler.h backports-5.10.110-1/backport-include/linux/compiler.h
+--- backports-5.10.110-1.orig/backport-include/linux/compiler.h	2022-04-10 22:49:47.262261400 +0000
++++ backports-5.10.110-1/backport-include/linux/compiler.h	2022-08-07 08:30:29.457735663 +0000
+@@ -47,7 +47,7 @@
+ 	case 8: *(__u64 *)res = *(volatile __u64 *)p; break;		\
+ 	default:							\
+ 		barrier();						\
+-		__builtin_memcpy((void *)res, (const void *)p, size);	\
++		__builtin_memcpy((void *)res, (void *)p, size);	\
+ 		barrier();						\
+ 	}								\
+ })
+@@ -66,7 +66,10 @@
+ })
+ 
+ #define READ_ONCE(x) __READ_ONCE(x, 1)
+-
++#endif
++ 
++#ifndef WRITE_ONCE
++#include <linux/types.h>
+ static __always_inline void __write_once_size(volatile void *p, void *res, int size)
+ {
+ 	switch (size) {
+diff -aur backports-5.10.110-1.orig/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h backports-5.10.110-1/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
+--- backports-5.10.110-1.orig/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h	2022-04-10 22:49:46.974258400 +0000
++++ backports-5.10.110-1/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h	2022-08-07 08:11:38.006558686 +0000
+@@ -6,6 +6,7 @@
+ #ifndef BRCMFMAC_DEBUG_H
+ #define BRCMFMAC_DEBUG_H
+ 
++#include <linux/err.h>	/* ERR_PTR */
+ #include <linux/net.h>	/* net_ratelimit() */
+ 
+ /* message levels */
+diff -aur backports-5.10.110-1.orig/net/mac80211/rx.c backports-5.10.110-1/net/mac80211/rx.c
+--- backports-5.10.110-1.orig/net/mac80211/rx.c	2022-04-10 22:49:46.374251800 +0000
++++ backports-5.10.110-1/net/mac80211/rx.c	2022-08-07 15:06:21.745883747 +0000
+@@ -9,6 +9,7 @@
+  * Copyright (C) 2018-2021 Intel Corporation
+  */
+ 
++#include <linux/bug.h>
+ #include <linux/jiffies.h>
+ #include <linux/slab.h>
+ #include <linux/kernel.h>

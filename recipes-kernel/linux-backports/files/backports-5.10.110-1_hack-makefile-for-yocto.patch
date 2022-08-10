@@ -1,0 +1,32 @@
+diff --color -aur backports-5.10.110-1.orig/Makefile backports-5.10.110-1/Makefile
+--- backports-5.10.110-1.orig/Makefile	2022-04-11 01:49:46.334251400 +0300
++++ backports-5.10.110-1/Makefile	2022-08-09 12:03:10.591882206 +0300
+@@ -9,11 +9,12 @@
+ BACKPORT_DIR := $(shell pwd)
+ 
+ KMODDIR ?= updates
+-ifneq ($(origin KLIB), undefined)
+-KMODPATH_ARG := "INSTALL_MOD_PATH=$(KLIB)"
++ifeq (KMODPATH_ARG, undefined)
++ifneq (INSTALL_MOD_PATH, undefined)
++KMODPATH_ARG := "INSTALL_MOD_PATH=$(INSTALL_MOD_PATH)"
+ else
+-KLIB := /lib/modules/$(shell uname -r)/
+-KMODPATH_ARG :=
++KMODPATH_ARG := ""
++endif
+ endif
+ KLIB_BUILD ?= $(KLIB)/build/
+ KERNEL_CONFIG := $(KLIB_BUILD)/.config
+diff --color -aur backports-5.10.110-1.orig/Makefile.real backports-5.10.110-1/Makefile.real
+--- backports-5.10.110-1.orig/Makefile.real	2022-04-11 01:49:46.326251300 +0300
++++ backports-5.10.110-1/Makefile.real	2022-08-09 12:08:27.315259298 +0300
+@@ -94,8 +94,6 @@
+ 		modules_install
+ 	@./scripts/blacklist.sh $(KLIB)/ $(KLIB)/$(KMODDIR)
+ 	@./scripts/compress_modules.sh $(KLIB)/$(KMODDIR)
+-	@./scripts/check_depmod.sh
+-	@/sbin/depmod -a
+ 	@./scripts/update-initramfs.sh $(KLIB)
+ 	@echo
+ 	@echo Your backported driver modules should be installed now.

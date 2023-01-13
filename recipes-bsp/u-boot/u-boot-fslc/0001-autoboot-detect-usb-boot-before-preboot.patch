@@ -1,0 +1,94 @@
+From bdced219962ae8ebbdf8890853e2bff7d7727414 Mon Sep 17 00:00:00 2001
+From: Josua Mayer <josua@solid-run.com>
+Date: Wed, 18 Jan 2023 12:21:48 +0200
+Subject: [PATCH] autoboot: detect usb boot before preboot
+
+Avoid false positive when detecting whether cpu booted from USB, by
+reading the usb phy register *before* preboot commands run "usb start".
+
+Fixes: 5eb6dd4c MLK-21854-2 imx: uuu: Update autoboot to run uuu or fastboot
+
+Signed-off-by: Josua Mayer <josua@solid-run.com>
+---
+ common/autoboot.c  | 16 +++++++++++++---
+ common/main.c      |  1 +
+ include/autoboot.h |  8 ++++++++
+ 3 files changed, 22 insertions(+), 3 deletions(-)
+
+diff --git a/common/autoboot.c b/common/autoboot.c
+index 0ad2a6c352..7818813f4a 100644
+--- a/common/autoboot.c
++++ b/common/autoboot.c
+@@ -442,6 +442,16 @@ static void process_fdt_options(const void *blob)
+ #endif /* CONFIG_SYS_TEXT_BASE */
+ }
+ 
++#if defined(is_boot_from_usb)
++static int stored_is_boot_from_usb;
++#endif
++void autoboot_pre_preboot() {
++#if defined(is_boot_from_usb)
++	/* detect USB boot now to avoid PREBOOT commands changing registers */
++	stored_is_boot_from_usb = is_boot_from_usb();
++#endif
++}
++
+ const char *bootdelay_process(void)
+ {
+ 	char *s;
+@@ -461,13 +471,13 @@ const char *bootdelay_process(void)
+ 		bootdelay = ofnode_conf_read_int("bootdelay", bootdelay);
+ 
+ #if defined(is_boot_from_usb)
+-	if (is_boot_from_usb() && env_get("bootcmd_mfg")) {
++	if (stored_is_boot_from_usb && env_get("bootcmd_mfg")) {
+ 		disconnect_from_pc();
+ 		printf("Boot from USB for mfgtools\n");
+ 		bootdelay = 0;
+ 		env_set_default("Use default environment for \
+ 				 mfgtools\n", 0);
+-	} else if (is_boot_from_usb()) {
++	} else if (stored_is_boot_from_usb) {
+ 		printf("Boot from USB for uuu\n");
+ 		env_set("bootcmd", "fastboot 0");
+ 	} else {
+@@ -492,7 +502,7 @@ const char *bootdelay_process(void)
+ 		s = env_get("bootcmd");
+ 
+ #if defined(is_boot_from_usb)
+-	if (is_boot_from_usb() && env_get("bootcmd_mfg")) {
++	if (stored_is_boot_from_usb && env_get("bootcmd_mfg")) {
+ 		s = env_get("bootcmd_mfg");
+ 		printf("Run bootcmd_mfg: %s\n", s);
+ 	}
+diff --git a/common/main.c b/common/main.c
+index 682f3359ea..4372f8816d 100644
+--- a/common/main.c
++++ b/common/main.c
+@@ -48,6 +48,7 @@ void main_loop(void)
+ 
+ 	cli_init();
+ 
++	autoboot_pre_preboot();
+ 	if (IS_ENABLED(CONFIG_USE_PREBOOT))
+ 		run_preboot_environment_command();
+ 
+diff --git a/include/autoboot.h b/include/autoboot.h
+index eb204995d0..f3a4f832e0 100644
+--- a/include/autoboot.h
++++ b/include/autoboot.h
+@@ -48,6 +48,14 @@ static inline bool autoboot_set_keyed(bool autoboot_keyed)
+ #endif
+ 
+ #ifdef CONFIG_AUTOBOOT
++/**
++ * autoboot_pre_preboot - early initialisation before preboot
++ *
++ * read system properties and registers that may change once
++ * preboot commands are executed.
++ */
++void autoboot_pre_preboot(void);
++
+ /**
+  * bootdelay_process() - process the bootd delay
+  *

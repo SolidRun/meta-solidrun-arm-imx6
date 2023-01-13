@@ -1,0 +1,4 @@
+define KFEATURE_DESCRIPTION "Enable Features needed for IRC receiver"
+define KFEATURE_COMPATIBILITY board
+
+kconf hardware ir-receiver.cfg

@@ -1,0 +1,58 @@
+From 022d56a2d8a8b38714acd6cee367fd52386e6b7a Mon Sep 17 00:00:00 2001
+From: Josua Mayer <josua@solid-run.com>
+Date: Thu, 26 Jan 2023 12:22:29 +0200
+Subject: [PATCH] ARM: dts: hummingboard: disable can interface for microsom
+ rev. 1.5
+
+Disable can1 for all combinations of HummingBoard, SoM revision 1.5 with
+eMMC - to fix a pinmux conflict that left eMMC unusable.
+
+HummingBoard dts has enabled can1 using the SD3_CMD and SD3_CLK pads
+exposed on the 26-pin header by default.
+SoMs revision 1.5 introduced eMMC as an assembly option which reuses
+these signals.
+
+Signed-off-by: Josua Mayer <josua@solid-run.com>
+---
+ arch/arm/boot/dts/imx6dl-hummingboard-emmc-som-v15.dts | 8 ++++++++
+ arch/arm/boot/dts/imx6q-hummingboard-emmc-som-v15.dts  | 8 ++++++++
+ 2 files changed, 16 insertions(+)
+
+diff --git a/arch/arm/boot/dts/imx6dl-hummingboard-emmc-som-v15.dts b/arch/arm/boot/dts/imx6dl-hummingboard-emmc-som-v15.dts
+index a63f742f20d9..3ef995488f26 100644
+--- a/arch/arm/boot/dts/imx6dl-hummingboard-emmc-som-v15.dts
++++ b/arch/arm/boot/dts/imx6dl-hummingboard-emmc-som-v15.dts
+@@ -51,3 +51,11 @@ / {
+ 	model = "SolidRun HummingBoard Solo/DualLite (1.5som+emmc)";
+ 	compatible = "solidrun,hummingboard/dl", "fsl,imx6dl";
+ };
++
++/*
++ * CAN signals on 26-pin header are not available on SoMs with eMMC:
++ * SD3_CMD and SD3_CLK pads are instead connected to the eMMC.
++ */
++&can1 {
++	status = "disabled";
++};
+diff --git a/arch/arm/boot/dts/imx6q-hummingboard-emmc-som-v15.dts b/arch/arm/boot/dts/imx6q-hummingboard-emmc-som-v15.dts
+index c51b4e4fd71e..92fd9c993750 100644
+--- a/arch/arm/boot/dts/imx6q-hummingboard-emmc-som-v15.dts
++++ b/arch/arm/boot/dts/imx6q-hummingboard-emmc-som-v15.dts
+@@ -52,6 +52,14 @@ / {
+ 	compatible = "solidrun,hummingboard/q", "fsl,imx6q";
+ };
+ 
++/*
++ * CAN signals on 26-pin header are not available on SoMs with eMMC:
++ * SD3_CMD and SD3_CLK pads are instead connected to the eMMC.
++ */
++&can1 {
++	status = "disabled";
++};
++
+ &sata {
+ 	status = "okay";
+ 	fsl,transmit-level-mV = <1025>;
+-- 
+2.35.3
+

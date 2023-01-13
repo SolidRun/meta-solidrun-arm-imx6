@@ -1,0 +1,54 @@
+From 2ff7534425dac6e5dc59e5463226b10191ad9d91 Mon Sep 17 00:00:00 2001
+From: Josua Mayer <josua@solid-run.com>
+Date: Tue, 17 Jan 2023 17:18:26 +0200
+Subject: [PATCH 2/2] ARM: dts: solidsense: add miscelaneous changes from linux
+ 5.4 fork
+
+This is a collection of small changes to the solidsense device-tree
+copied from meta-solidrun-solidsense (state fab6dc2f May 17 2022).
+Whether each change is still relevant was not checked.
+
+Signed-off-by: Josua Mayer <josua@solid-run.com>
+---
+ arch/arm/boot/dts/imx6qdl-solidsense.dtsi | 5 +++++
+ arch/arm/boot/dts/imx6qdl-sr-som-ti.dtsi  | 2 ++
+ 2 files changed, 7 insertions(+)
+
+diff --git a/arch/arm/boot/dts/imx6qdl-solidsense.dtsi b/arch/arm/boot/dts/imx6qdl-solidsense.dtsi
+index 234827e554d0..79e4b4705fdc 100644
+--- a/arch/arm/boot/dts/imx6qdl-solidsense.dtsi
++++ b/arch/arm/boot/dts/imx6qdl-solidsense.dtsi
+@@ -139,6 +139,10 @@ MX6QDL_PAD_EIM_D25__UART3_RX_DATA	0x1b0b1
+ 	};
+ };
+ 
++&pcie {
++	fsl,max-link-speed = <1>;
++};
++
+ &pwm1 {
+ 	status = "disabled";
+ };
+@@ -156,5 +160,6 @@ &uart2 {
+ &uart3 {
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&pinctrl_solidsense_uart3>;
++	speed = <115200>;
+ 	status = "okay";
+ };
+diff --git a/arch/arm/boot/dts/imx6qdl-sr-som-ti.dtsi b/arch/arm/boot/dts/imx6qdl-sr-som-ti.dtsi
+index 352ac585ca6b..ae294f4cb304 100644
+--- a/arch/arm/boot/dts/imx6qdl-sr-som-ti.dtsi
++++ b/arch/arm/boot/dts/imx6qdl-sr-som-ti.dtsi
+@@ -143,6 +143,8 @@ bluetooth {
+ 		enable-gpios = <&gpio6 0 GPIO_ACTIVE_HIGH>;
+ 		pinctrl-names = "default";
+ 		pinctrl-0 = <&pinctrl_microsom_ti_bt>;
++		current-speed = <115200>;
++		max-speed = <3000000>;
+ 	};
+ };
+ 
+-- 
+2.35.3
+

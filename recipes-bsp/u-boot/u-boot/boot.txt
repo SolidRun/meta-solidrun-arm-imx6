@@ -1,0 +1,17 @@
+# SolidRun Distro-Boot enabled Boot Script for Yocto
+#
+# Copyright 2023 Josua Mayer <josua@solid-run.com>
+#
+
+# load kernel from boot media
+load ${devtype} ${devnum}:${distro_bootpart} ${kernel_addr_r} zImage
+
+# load device-tree from boot media
+load ${devtype} ${devnum}:${distro_bootpart} ${fdt_addr_r} ${fdtfile}
+
+# generate root= kernel argument for partition 2
+part uuid ${devtype} ${devnum}:2 uuid
+setenv bootargs "${bootargs} root=PARTUUID=${uuid} rootwait rw console=${console},${baudrate}"
+
+# boot Linux
+bootz ${kernel_addr_r} - ${fdt_addr_r}

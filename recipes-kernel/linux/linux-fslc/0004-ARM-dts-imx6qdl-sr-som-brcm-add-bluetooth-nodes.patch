@@ -1,0 +1,98 @@
+From 5951d1fbe5fef954447e1871498f4b597dd97c4e Mon Sep 17 00:00:00 2001
+From: Josua Mayer <josua@solid-run.com>
+Date: Tue, 7 Feb 2023 17:25:25 +0200
+Subject: [PATCH 4/5] ARM: dts: imx6qdl-sr-som-brcm: add bluetooth nodes
+
+Linux now supports configuring the UART and loading firmware for BCM4329
+and 4330 bluetooth modules. Add descriptions for both variants.
+
+Disable both nodes by default for compatibility with existing systems.
+In the future U-Boot may implement a detection mechanism and update the
+status property accordingly.
+
+Signed-off-by: Josua Mayer <josua@solid-run.com>
+---
+ arch/arm/boot/dts/imx6qdl-sr-som-brcm.dtsi | 46 ++++++++++++++++++++++
+ 1 file changed, 46 insertions(+)
+
+diff --git a/arch/arm/boot/dts/imx6qdl-sr-som-brcm.dtsi b/arch/arm/boot/dts/imx6qdl-sr-som-brcm.dtsi
+index b55af61dfeca..ced92dff9aa0 100644
+--- a/arch/arm/boot/dts/imx6qdl-sr-som-brcm.dtsi
++++ b/arch/arm/boot/dts/imx6qdl-sr-som-brcm.dtsi
+@@ -48,6 +48,7 @@ clk_brcm: brcm-clock {
+ 		enable-gpios = <&gpio5 5 GPIO_ACTIVE_HIGH>;
+ 	};
+ 
++	/* SoM variants with BCM4329 share the WiFi and Bluetooth enable signal. */
+ 	reg_brcm: brcm-reg {
+ 		compatible = "regulator-fixed";
+ 		enable-active-high;
+@@ -60,6 +61,13 @@ reg_brcm: brcm-reg {
+ 		startup-delay-us = <200000>;
+ 	};
+ 
++	/*
++	 * Before Linux support for bcm4329/4330 bluetooth,
++	 * both WiFi and Bluetooth reset signals must be toggled.
++	 *
++	 * Once U-Boot implements device detection and enables the bluetooth nodes,
++	 * it must also remove the bluetooth reset GPIO6_IO0 here.
++	 */
+ 	usdhc1_pwrseq: usdhc1_pwrseq {
+ 		compatible = "mmc-pwrseq-simple";
+ 		reset-gpios = <&gpio5 26 GPIO_ACTIVE_LOW>,
+@@ -76,6 +84,7 @@ pinctrl_microsom_brcm_bt: microsom-brcm-bt {
+ 				MX6QDL_PAD_CSI0_DAT14__GPIO6_IO00	0x40013070
+ 				MX6QDL_PAD_CSI0_DAT15__GPIO6_IO01	0x40013070
+ 				MX6QDL_PAD_CSI0_DAT18__GPIO6_IO04	0x40013070
++				MX6QDL_PAD_CSI0_DAT19__GPIO6_IO05	0x40013070
+ 			>;
+ 		};
+ 
+@@ -128,6 +137,43 @@ &uart4 {
+ 	pinctrl-0 = <&pinctrl_microsom_brcm_bt &pinctrl_microsom_uart4>;
+ 	uart-has-rtscts;
+ 	status = "okay";
++
++	/*
++	 * Unfortunately SoMs may have either BCM4329 or BCM4330,
++	 * including subtle differences in GPIOs.
++	 *
++	 * Disable these nodes by default to continue using hciattach from
++	 * userspace for controlling the Bluetooth function.
++	 * Once U-Boot implements device identificastion, it can selectively
++	 * update the status property.
++	 */
++	bluetooth-bcm-4329 {
++		compatible = "brcm,bcm4329-bt";
++
++		shutdown-gpios = <&gpio3 19 GPIO_ACTIVE_HIGH>; // WL_BT_REG_ON EIM_D19
++		reset-gpios = <&gpio6 0 GPIO_ACTIVE_LOW>; // CSI0_DAT14
++		device-wakeup-gpios = <&gpio6 1 GPIO_ACTIVE_HIGH>; // CSI0_DAT15
++
++		interrupt-parent = <&gpio6>;
++		interrupts = <4 IRQ_TYPE_LEVEL_HIGH>; // CSI0_DAT18
++		interrupt-names = "host-wakeup";
++
++		status = "disabled";
++	};
++
++	bluetooth-bcm-4330 {
++		compatible = "brcm,bcm4330-bt";
++
++		shutdown-gpios = <&gpio6 5 GPIO_ACTIVE_HIGH>; // BT_REG_ON CSI0_DAT19
++		reset-gpios = <&gpio6 0 GPIO_ACTIVE_LOW>; // CSI0_DAT14
++		device-wakeup-gpios = <&gpio6 1 GPIO_ACTIVE_HIGH>; // CSI0_DAT15
++
++		interrupt-parent = <&gpio6>;
++		interrupts = <4 IRQ_TYPE_LEVEL_HIGH>; // CSI0_DAT18
++		interrupt-names = "host-wakeup";
++
++		status = "disabled";
++	};
+ };
+ 
+ /* USDHC1 - Connected to optional BRCM Wifi/BT/FM */
+-- 
+2.35.3
+

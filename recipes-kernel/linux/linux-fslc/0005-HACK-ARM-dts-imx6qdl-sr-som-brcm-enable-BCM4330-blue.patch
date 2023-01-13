@@ -1,0 +1,40 @@
+From aad36b4b26694814226316be553b83acdb80852a Mon Sep 17 00:00:00 2001
+From: Josua Mayer <josua@solid-run.com>
+Date: Wed, 8 Feb 2023 12:49:34 +0200
+Subject: [PATCH 5/5] HACK: ARM: dts: imx6qdl-sr-som-brcm: enable BCM4330
+ bluetooth by default
+
+BCM4329 is a rare variant. Enable the 4330 by default to suit most
+existing systems.
+
+Signed-off-by: Josua Mayer <josua@solid-run.com>
+---
+ arch/arm/boot/dts/imx6qdl-sr-som-brcm.dtsi | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/arch/arm/boot/dts/imx6qdl-sr-som-brcm.dtsi b/arch/arm/boot/dts/imx6qdl-sr-som-brcm.dtsi
+index ced92dff9aa0..470c14ddde70 100644
+--- a/arch/arm/boot/dts/imx6qdl-sr-som-brcm.dtsi
++++ b/arch/arm/boot/dts/imx6qdl-sr-som-brcm.dtsi
+@@ -70,8 +70,7 @@ reg_brcm: brcm-reg {
+ 	 */
+ 	usdhc1_pwrseq: usdhc1_pwrseq {
+ 		compatible = "mmc-pwrseq-simple";
+-		reset-gpios = <&gpio5 26 GPIO_ACTIVE_LOW>,
+-			      <&gpio6 0 GPIO_ACTIVE_LOW>;
++		reset-gpios = <&gpio5 26 GPIO_ACTIVE_LOW>;
+ 		clocks = <&clk_brcm>;
+ 		clock-names = "ext_clock";
+ 	};
+@@ -172,7 +171,7 @@ bluetooth-bcm-4330 {
+ 		interrupts = <4 IRQ_TYPE_LEVEL_HIGH>; // CSI0_DAT18
+ 		interrupt-names = "host-wakeup";
+ 
+-		status = "disabled";
++		status = "okay";
+ 	};
+ };
+ 
+-- 
+2.35.3
+

@@ -1,0 +1,123 @@
+From 77863f651eb6c4dfd513754d8a79e99135a79f6d Mon Sep 17 00:00:00 2001
+From: Josua Mayer <josua@solid-run.com>
+Date: Fri, 10 Feb 2023 16:28:32 +0200
+Subject: [PATCH] mx6cuboxi: Support build-time selection of board variant
+
+Some variants are not easily detected through GPIOs.
+Allow selecting them at compile-time:
+- SolidSense N6
+- HummingBoard CBi
+
+Signed-off-by: Josua Mayer <josua@solid-run.com>
+
+%% original patch: 0001-mx6cuboxi-Support-build-time-selection-of-board-vari.patch
+---
+ board/solidrun/mx6cuboxi/Kconfig     | 14 ++++++++++++++
+ board/solidrun/mx6cuboxi/mx6cuboxi.c | 26 +++++++++++++++++++++++++-
+ include/configs/mx6cuboxi.h          |  2 ++
+ 3 files changed, 41 insertions(+), 1 deletion(-)
+
+diff --git a/board/solidrun/mx6cuboxi/Kconfig b/board/solidrun/mx6cuboxi/Kconfig
+index 741c1754f8..ba93432c6b 100644
+--- a/board/solidrun/mx6cuboxi/Kconfig
++++ b/board/solidrun/mx6cuboxi/Kconfig
+@@ -9,4 +9,18 @@ config SYS_VENDOR
+ config SYS_CONFIG_NAME
+ 	default "mx6cuboxi"
+ 
++choice
++	prompt "Board Variant"
++	default SYS_BOARD_SR_AUTO
++
++config SYS_BOARD_SR_AUTO
++	bool "Automatic Board detection"
++
++config SYS_BOARD_SR_HUMMINGBOARD_CBI
++	bool "Force HummingBoard CBi"
++
++config SYS_BOARD_SR_SOLIDSENSE_N6
++	bool "Force SolidSense N6"
++endchoice
++
+ endif
+diff --git a/board/solidrun/mx6cuboxi/mx6cuboxi.c b/board/solidrun/mx6cuboxi/mx6cuboxi.c
+index 8fad3febf9..575207fa11 100644
+--- a/board/solidrun/mx6cuboxi/mx6cuboxi.c
++++ b/board/solidrun/mx6cuboxi/mx6cuboxi.c
+@@ -67,7 +67,9 @@ enum board_type {
+ 	CUBOXI          = 0x00,
+ 	HUMMINGBOARD    = 0x01,
+ 	HUMMINGBOARD2   = 0x02,
+-	UNKNOWN         = 0x03,
++	HUMMINGBOARD2_CBI = 0x03,
++	HUMMINGBOARD2_SOLIDSENSE = 0x04,
++	UNKNOWN         = 0x05,
+ };
+ 
+ #define MEM_STRIDE 0x4000000
+@@ -576,6 +578,13 @@ static enum board_type board_type(void)
+ {
+ 	int val1, val2, val3;
+ 
++	if (IS_ENABLED(CONFIG_SYS_BOARD_SR_SOLIDSENSE_N6))
++		return HUMMINGBOARD2_SOLIDSENSE;
++	if (IS_ENABLED(CONFIG_SYS_BOARD_SR_HUMMINGBOARD_CBI))
++		return HUMMINGBOARD2_CBI;
++	else /* IS_ENABLED(CONFIG_SYS_BOARD_SR_AUTO) */
++		;
++
+ 	SETUP_IOMUX_PADS(board_detect);
+ 
+ 	/*
+@@ -645,6 +654,12 @@ int checkboard(void)
+ 	case HUMMINGBOARD2:
+ 		puts("Board: MX6 HummingBoard2");
+ 		break;
++	case HUMMINGBOARD2_CBI:
++		puts("Board: MX6 HummingBoard CBi");
++		break;
++	case HUMMINGBOARD2_SOLIDSENSE:
++		puts("Board: MX6 SolidSense N6");
++		break;
+ 	case UNKNOWN:
+ 	default:
+ 		puts("Board: Unknown\n");
+@@ -688,6 +703,8 @@ int ft_board_setup(void *fdt, bd_t *bd)
+ 		switch (board) {
+ 		case HUMMINGBOARD:
+ 		case HUMMINGBOARD2:
++		case HUMMINGBOARD2_CBI:
++		case HUMMINGBOARD2_SOLIDSENSE:
+ 			/* atheros phy may appear only at address 0 */
+ 			break;
+ 		case CUBOXI:
+@@ -763,6 +780,13 @@ board_type:
+ 	case HUMMINGBOARD2:
+ 		env_set("board_name", "HUMMINGBOARD2");
+ 		break;
++	case HUMMINGBOARD2_CBI:
++		env_set("board_name", "HUMMINGBOARD2");
++		env_set("is_cbi", "yes");
++		break;
++	case HUMMINGBOARD2_SOLIDSENSE:
++		env_set("board_name", "SOLIDSENSE");
++		break;
+ 	case UNKNOWN:
+ 	default:
+ 		env_set("board_name", "CUBOXI");
+diff --git a/include/configs/mx6cuboxi.h b/include/configs/mx6cuboxi.h
+index 230f05dbf7..d462f4afc0 100644
+--- a/include/configs/mx6cuboxi.h
++++ b/include/configs/mx6cuboxi.h
+@@ -130,6 +130,8 @@
+ 			"setenv cbisuffix -cbi; fi; " \
+ 		"if test ${has_emmc} = yes; then " \
+ 			"setenv emmcsuffix -emmc; fi; " \
++		"if test ${board_name} = SOLIDSENSE ; then " \
++			"setenv fdtfile ${fdtprefix}-solidsense.dtb; fi; " \
+ 		"if test ${board_name} = HUMMINGBOARD2 ; then " \
+ 			"setenv fdtfile ${fdtprefix}-hummingboard2${cbisuffix}${emmcsuffix}${fdtsuffix}.dtb; fi; " \
+ 		"if test ${board_name} = HUMMINGBOARD ; then " \
+-- 
+2.35.5
+

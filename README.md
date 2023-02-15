@@ -29,17 +29,17 @@
   - MIPI-CSI: Untested
   - LCDIF: Untested
 - HummingBoard Edge:
-  - Serial Console: Untested
-  - microSD: Untested
-  - RJ45 Ethernet: Untested
-  - HDMI: Untested
-  - 4x USB-A: Untested
-  - 3.5mm Analog Stereo Output: Untested
+  - Serial Console: OK
+  - microSD: OK
+  - RJ45 Ethernet: OK
+  - HDMI: OK
+  - 4x USB-A: OK
+  - 3.5mm Analog Stereo Output: OK
   - 3.5mm Analog Mono Input: Untested
-  - HDMI Digital Stereo Output: Untested
-  - m.2 SATA: Untested
+  - HDMI Digital Stereo Output: OK
+  - m.2 SATA: OK
   - mPCIe PCIe: Untested
-  - mPCIe USB: Untested
+  - mPCIe USB: OK
   - IR: Untested
   - MIPI-CSI: Untested
   - LCDIF: Untested
@@ -115,6 +115,15 @@ Aside from `core-image-minimal` two more complete configurations are recommended
 - `core-image-weston-sdk`
 
 Results are available in **`tmp/deploy/images/imx6qdlcubox`**.
+
+Builds for `MACHINE=imx6qdlcubox` are usable on the basic reference platforms:
+- Cubox-i
+- HummingBoard Base/Pro
+- HummingBoard Gate/Edge
+
+Specialised boards require selecting a different `MACHINE`:
+- HummingBoard CBi: `MACHINE=imx6qdlhummingboardcbi`
+- SolidSense N6: `MACHINE=imx6qdlsolidsense`
 
 ## Compatible Layers
 

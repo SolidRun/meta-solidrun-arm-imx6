@@ -69,7 +69,7 @@ Then download the build recipes:
     git clone -b kirkstone git://git.yoctoproject.org/poky
     git clone -b kirkstone git://git.openembedded.org/openembedded-core
     git clone -b kirkstone git://git.yoctoproject.org/git/meta-freescale
-    git clone -b develop-kirkstone-imx6 https://github.com/Josua-SR/meta-solidrun-arm-imx6.git
+    git clone -b kirkstone https://github.com/Josua-SR/meta-solidrun-arm-imx6.git
 
 Initialise a build directory with example configuration files and appropriate shell environment variables.
 Note that this step may be repeated without losing the contents of the build directory, to reinitialise the required environment variables (e.g. `$PATH`):

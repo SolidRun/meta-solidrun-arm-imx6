@@ -1,0 +1,222 @@
+name: build
+
+on:
+  push:
+    branches: [ "kirkstone" ]
+  pull_request:
+    branches: [ "kirkstone" ]
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  prepare_container:
+    runs-on: self-hosted
+    outputs:
+      uid: ${{ steps.uid_step.outputs.userid }}
+      gid: ${{ steps.uid_step.outputs.groupid }}
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v4
+
+      - name: Get user id/group
+        id: uid_step
+        run: |
+          echo "userid=$(id -u)" >> "$GITHUB_OUTPUT"
+          echo "groupid=$(id -g)" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          buildkitd-config: /etc/docker/cibuilder.toml
+
+      - name: Login to Docker Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ciserver.ci:5000
+          username: ${{ secrets.CI_CACHE_REGISTRY_LOGIN }}
+          password: ${{ secrets.CI_CACHE_REGISTRY_PASSWORD }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ciserver.ci:5000/${{ github.repository_id }}:latest
+          cache-from: type=registry,ref=ciserver.ci:5000/${{ github.repository_id }}:cache
+          cache-to: type=registry,ref=ciserver.ci:5000/${{ github.repository_id }}:cache,mode=max
+          file: conf/docker/Dockerfile
+          build-args: |
+            USER_ID=${{ steps.uid_step.outputs.userid }}
+            GROUP_ID=${{ steps.uid_step.outputs.groupid }}
+
+  build_images:
+    needs: prepare_container
+    runs-on: self-hosted
+    timeout-minutes: 1080
+    container:
+        image: ciserver.ci:5000/${{ github.repository_id }}:latest
+        credentials:
+            username: ${{ secrets.CI_CACHE_REGISTRY_LOGIN }}
+            password: ${{ secrets.CI_CACHE_REGISTRY_PASSWORD }}
+        options: --user "${{ needs.prepare_container.outputs.uid }}:${{ needs.prepare_container.outputs.gid }}"
+    outputs:
+      build_tag: ${{ steps.tag_step.outputs.build_tag }}
+    steps:
+      - name: Checkout dependency layers
+        shell: bash {0}
+        run: |
+              git clone -b kirkstone git://git.yoctoproject.org/poky
+              git clone -b kirkstone git://git.yoctoproject.org/git/meta-freescale
+              git clone -b kirkstone https://git.openembedded.org/meta-openembedded
+              git clone -b kirkstone https://git.yoctoproject.org/meta-virtualization
+              git clone -b kirkstone https://github.com/aws4embeddedlinux/meta-aws.git
+
+      - name: Checkout pull-request version of meta-solidrun-arm-imx6
+        uses: actions/checkout@v4
+        with:
+          path: meta-solidrun-arm-imx6
+
+      - name: Get build tag
+        shell: bash {0}
+        id: tag_step
+        run: |
+          build_tag=$(date +%Y-%m-%d)_$(cd meta-solidrun-arm-imx6; git rev-parse --short HEAD)
+          echo "build_tag=$build_tag" >> "$GITHUB_OUTPUT"
+
+      - name: Create cache dir
+        run: mkdir -p buildcache
+
+      - name: Fetch cache from server
+        uses: tespkg/actions-cache/restore@v1
+        with:
+          endpoint: ciserver.ci
+          port: 9000
+          insecure: true
+          accessKey: ${{ secrets.CI_CACHE_MINIO_ACCESS }}
+          secretKey: ${{ secrets.CI_CACHE_MINIO_SECRET }}
+          bucket: cicache
+          use-fallback: false
+          key: ${{ github.repository }}
+          path: |
+            buildcache
+
+      - name: Configure
+        shell: bash {0}
+        run: |
+            cd poky
+            . ./oe-init-build-env ../build
+            printf 'BBLAYERS += "%s"\n' $GITHUB_WORKSPACE/meta-freescale >> conf/bblayers.conf
+            printf 'BBLAYERS += "%s"\n' $GITHUB_WORKSPACE/meta-solidrun-arm-imx6 >> conf/bblayers.conf
+            printf 'BBLAYERS += "%s"\n' $GITHUB_WORKSPACE/meta-openembedded/meta-filesystems >> conf/bblayers.conf
+            printf 'BBLAYERS += "%s"\n' $GITHUB_WORKSPACE/meta-openembedded/meta-multimedia >> conf/bblayers.conf
+            printf 'BBLAYERS += "%s"\n' $GITHUB_WORKSPACE/meta-openembedded/meta-networking >> conf/bblayers.conf
+            printf 'BBLAYERS += "%s"\n' $GITHUB_WORKSPACE/meta-openembedded/meta-oe >> conf/bblayers.conf
+            printf 'BBLAYERS += "%s"\n' $GITHUB_WORKSPACE/meta-openembedded/meta-python >> conf/bblayers.conf
+            printf 'BBLAYERS += "%s"\n' $GITHUB_WORKSPACE/meta-virtualization >> conf/bblayers.conf
+            printf 'BBLAYERS += "%s"\n' $GITHUB_WORKSPACE/meta-aws >> conf/bblayers.conf
+            printf '# Accept NXP EULAs\nACCEPT_FSL_EULA = "1"\n' >> conf/local.conf
+            printf '# Enable Docker\nIMAGE_INSTALL:append = " docker-ce python3-docker-compose kernel-modules"\nDISTRO_FEATURES:append = " virtualization"\n' >> conf/local.conf
+            printf '# Enable Corretto JRE\nIMAGE_INSTALL:append = " corretto-11-bin"\n' >> conf/local.conf
+            printf '# CI Config\nrequire conf/includes/ci.conf\n' >> conf/local.conf
+            # patch meta-aws
+            sed -i "s;greengrass-bin;greengrass;g" $GITHUB_WORKSPACE/meta-aws/recipes-devtools/amazon-corretto/corretto-11-bin_*.bb
+
+      - name: Download Sources (ignore errors)
+        shell: bash {0}
+        run: |
+            cd poky
+            . ./oe-init-build-env ../build
+            export CACHE_DIR="$GITHUB_WORKSPACE/buildcache"
+            export BB_ENV_PASSTHROUGH_ADDITIONS="$BB_ENV_PASSTHROUGH_ADDITIONS CACHE_DIR"
+            MACHINE=imx6qdlcubox bitbake -k core-image-full-cmdline core-image-weston-sdk --runall=fetch
+        continue-on-error: true
+
+      - name: Build (ignore errors)
+        id: build_step
+        shell: bash {0}
+        run: |
+            cd poky
+            . ./oe-init-build-env ../build
+            export CACHE_DIR="$GITHUB_WORKSPACE/buildcache"
+            export BB_ENV_PASSTHROUGH_ADDITIONS="$BB_ENV_PASSTHROUGH_ADDITIONS CACHE_DIR"
+            MACHINE=imx6qdlcubox bitbake -k core-image-full-cmdline core-image-weston-sdk
+        continue-on-error: true
+
+      - name: Update cache on the server (build may have failed)
+#        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        uses: tespkg/actions-cache/save@v1
+        with:
+          endpoint: ciserver.ci
+          port: 9000
+          insecure: true
+          accessKey: ${{ secrets.CI_CACHE_MINIO_ACCESS }}
+          secretKey: ${{ secrets.CI_CACHE_MINIO_SECRET }}
+          bucket: cicache
+          use-fallback: false
+          key: ${{ github.repository }}
+          path: |
+            buildcache
+
+      - name: Fail Late
+        if: failure() && steps.build_step.outcome == 'failure'
+        shell: bash {0}
+        run: |
+            false
+
+      - name: Select artifacts for publishing
+        shell: bash -e {0}
+        run: |
+            mkdir deploy
+            DEPLOY_PATH=build/tmp/deploy/images/imx6qdlcubox/
+            cp -L $DEPLOY_PATH/core-image-full-cmdline-imx6qdlcubox.wic.gz deploy/
+            cp -L $DEPLOY_PATH/core-image-full-cmdline-imx6qdlcubox.wic.bmap deploy/
+            cp -L $DEPLOY_PATH/core-image-full-cmdline-imx6qdlcubox.manifest deploy/
+            cp -L $DEPLOY_PATH/core-image-weston-sdk-imx6qdlcubox.wic.gz deploy/
+            cp -L $DEPLOY_PATH/core-image-weston-sdk-imx6qdlcubox.wic.bmap deploy/
+            cp -L $DEPLOY_PATH/core-image-weston-sdk-imx6qdlcubox.manifest deploy/
+            cp -L $DEPLOY_PATH/SPL deploy/
+            cp -L $DEPLOY_PATH/u-boot.img deploy/
+            pushd $DEPLOY_PATH; tar -cpzf device-tree.tgz *.dtb; popd
+            mv $DEPLOY_PATH/device-tree.tgz deploy/
+            cp -L $DEPLOY_PATH/zImage deploy/
+            cp -L $DEPLOY_PATH/modules-imx6qdlcubox.tgz deploy/
+            ls -lh deploy/
+
+      - name: Deploy to the local minio storage
+        uses: yakubique/minio-upload@v1.1.3
+        with:
+          endpoint: http://ciserver.ci:9000
+          insecure: true
+          access_key: ${{ secrets.CI_CACHE_MINIO_ACCESS }}
+          secret_key: ${{ secrets.CI_CACHE_MINIO_SECRET }}
+          bucket: cipublish
+          source: ./deploy
+          target: "/${{ github.repository_id }}/${{ steps.tag_step.outputs.build_tag }}"
+          recursive: true
+
+  publish_images:
+    needs: build_images
+    runs-on: self-hosted
+    if: github.event_name == 'push'
+    steps:
+      - name: Download an artifacts from MinIO
+        uses: yakubique/minio-download@v1.1.1
+        with:
+          endpoint: http://ciserver.ci:9000
+          insecure: true
+          access_key: ${{ secrets.CI_CACHE_MINIO_ACCESS }}
+          secret_key: ${{ secrets.CI_CACHE_MINIO_SECRET }}
+          bucket: cipublish
+          source: "/${{ github.repository_id }}/${{ needs.build_images.outputs.build_tag }}/"
+          target: "."
+          recursive: true
+
+      - name: Upload to S3
+        uses: shallwefootball/upload-s3-action@v1.3.3
+        with:
+          aws_key_id: ${{ secrets.IMAGES_S3_ACCESS }}
+          aws_secret_access_key: ${{ secrets.IMAGES_S3_SECRET }}
+          aws_bucket: ${{ secrets.IMAGES_S3_BUCKET }}
+          endpoint: ${{ secrets.IMAGES_S3_HOST }}
+          source_dir: deploy
+          destination_dir: IMX6/meta-solidrun-arm-imx6/${{ needs.build_images.outputs.build_tag }}

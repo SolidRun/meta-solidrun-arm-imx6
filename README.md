@@ -67,9 +67,12 @@ Start in a new empty directory with plenty of free disk space - at least 100GB.
 Then download the build recipes:
 
     git clone -b kirkstone git://git.yoctoproject.org/poky
-    git clone -b kirkstone git://git.openembedded.org/openembedded-core
     git clone -b kirkstone git://git.yoctoproject.org/git/meta-freescale
     git clone -b kirkstone https://github.com/Josua-SR/meta-solidrun-arm-imx6.git
+    # optional layers:
+    git clone -b kirkstone https://git.openembedded.org/meta-openembedded
+    git clone -b kirkstone https://git.yoctoproject.org/meta-virtualization
+    git clone -b kirkstone https://github.com/aws4embeddedlinux/meta-aws.git
 
 Initialise a build directory with example configuration files and appropriate shell environment variables.
 Note that this step may be repeated without losing the contents of the build directory, to reinitialise the required environment variables (e.g. `$PATH`):
@@ -96,11 +99,18 @@ Add both `meta-freescale` and `meta-solidrun-arm-imx6` so that the file looks si
     BBFILES ?= ""
 
     BBLAYERS ?= " \
-      /opt/workspace/YOCTO/mainline/poky/meta \
-      /opt/workspace/YOCTO/mainline/poky/meta-poky \
-      /opt/workspace/YOCTO/mainline/poky/meta-yocto-bsp \
-      /opt/workspace/YOCTO/mainline/meta-freescale \
-      /opt/workspace/YOCTO/mainline/meta-solidrun-arm-imx6 \
+      /opt/workspace/YOCTO/imx6-kirkstone/poky/meta \
+      /opt/workspace/YOCTO/imx6-kirkstone/poky/meta-poky \
+      /opt/workspace/YOCTO/imx6-kirkstone/poky/meta-yocto-bsp \
+      /opt/workspace/YOCTO/imx6-kirkstone/meta-freescale \
+      /opt/workspace/YOCTO/imx6-kirkstone/meta-solidrun-arm-imx6 \
+      /opt/workspace/YOCTO/imx6-kirkstone/meta-openembedded/meta-filesystems \
+      /opt/workspace/YOCTO/imx6-kirkstone/meta-openembedded/meta-multimedia \
+      /opt/workspace/YOCTO/imx6-kirkstone/meta-openembedded/meta-networking \
+      /opt/workspace/YOCTO/imx6-kirkstone/meta-openembedded/meta-oe \
+      /opt/workspace/YOCTO/imx6-kirkstone/meta-openembedded/meta-python \
+      /opt/workspace/YOCTO/imx6-kirkstone/meta-virtualization \
+      /opt/workspace/YOCTO/imx6-kirkstone/meta-aws \
       "
 
 To create a bootable image with default configuration it is enough to define the target machine and invoke `bitbake`:
@@ -139,6 +149,19 @@ Specialised boards require selecting a different `MACHINE`:
   To enable Amazon Corretto JRE, add to `conf/local.conf`:
 
       IMAGE_INSTALL:append = " corretto-11-bin"
+
+  Further resolve a dependency error caused by amazon gradually dropping armv7 support:
+
+      Missing or unbuildable dependency chain was: ['core-image-full-cmdline', 'corretto-11-bin', 'greengrass-bin', 'java-17']
+
+  Edit `meta-aws/recipes-devtools/amazon-corretto/corretto-11-bin_11.0.23.9.1.bb`:
+
+  ```diff
+  RDEPENDS:${PN}-ptest:prepend = "\
+  -    greengrass-bin \
+  +    greengrass \
+      "
+  ```
 
 ## Options
 

@@ -6,9 +6,11 @@ SRC_URI:append = " file://brcmfmac4329-sdio.txt \
                    file://brcmfmac4330-sdio.txt \
                    file://wl18xx-conf.bin \
                    https://github.com/SolidRun/deb-pkg_cuboxi-firmware-wireless/raw/master/BCM4329B1.hcd;name=bcm4329b1 \
-                   https://github.com/SolidRun/deb-pkg_cuboxi-firmware-wireless/raw/master/BCM4330B1.hcd;name=bcm4330b1"
+                   https://github.com/SolidRun/deb-pkg_cuboxi-firmware-wireless/raw/master/BCM4330B1.hcd;name=bcm4330b1 \
+                   https://github.com/SolidRun/deb-pkg_cuboxi-firmware-wireless/raw/master/TIInit_11.8.32.bts;name=wl1835bt"
 SRC_URI[bcm4329b1.sha256sum] = "7fbab01012c909b9b2de0fda3a76c43fa1c5c150e08642d7d1dbaf4d5ebf887c"
 SRC_URI[bcm4330b1.sha256sum] = "f790c0c981f003a684b2aaea0eb7e475ff33c3b7bc204678fee5efbbe21148a0"
+SRC_URI[wl1835bt.sha256sum] = "398e9149225c19e73415463bbbf54dd8cbbb8dd1a595251519b828c0f8f50446"
 
 do_install:append() {
 	base=solidrun,imx6qdl-som
@@ -35,6 +37,8 @@ do_install:append() {
 
 	# TODO: rename once Linux supports board-specific suffixes
 	install -v -m644 -D ${WORKDIR}/wl18xx-conf.bin ${D}${nonarch_base_libdir}/firmware/ti-connectivity/wl18xx-conf.bin
+
+	install -v -m644 -D ${WORKDIR}/TIInit_11.8.32.bts ${D}${nonarch_base_libdir}/firmware/ti-connectivity/TIInit_11.8.32.bts
 }
 
 FILES:${PN}-bcm4329:append = " ${nonarch_base_libdir}/firmware/brcm/BCM4329*.hcd"
